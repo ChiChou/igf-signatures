@@ -9,6 +9,8 @@ import re
 import sqlite3
 import subprocess
 import urllib.request
+import urllib.error
+import time
 
 from clang import Clang
 
@@ -54,8 +56,17 @@ def fetch(project, revision, path, cache):
     file = cache / key
     if not file.exists():
         url = f'https://android.googlesource.com/{project}/+/{revision}/{path}?format=TEXT'
-        data = base64.b64decode(urllib.request.urlopen(url, timeout=60).read())
-        file.write_bytes(data)
+        for attempt in range(5):
+            try:
+                data = base64.b64decode(urllib.request.urlopen(url, timeout=60).read())
+                file.write_bytes(data)
+                break
+            except (urllib.error.URLError, TimeoutError) as error:
+                if isinstance(error, urllib.error.HTTPError) and error.code not in (408,429,500,502,503,504):
+                    raise
+                if attempt == 4: raise
+                print(f'Retrying {project}/{path}: {error}', flush=True)
+                time.sleep(2 ** attempt)
     return file.read_bytes()
 
 
