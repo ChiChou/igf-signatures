@@ -21,6 +21,9 @@ jobs:
         with:
           python-version: '3.12'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
       - name: Install pinned NDK
         run: |
           version=$(python3 -c 'import json; print(json.load(open("sources.json"))["ndk"])')
@@ -69,6 +72,10 @@ jobs:
           VERSION: ${{ steps.version.outputs.value }}
           EVENT: ${{ github.event_name }}
         run: |
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "Release $VERSION already exists; keeping its assets immutable."
+            exit 0
+          fi
           extra=()
           if [ "$EVENT" = schedule ]; then extra+=(--prerelease); fi
           gh release create "$VERSION" dist/signatures.db.gz dist/manifest.json dist/diagnostics.json NOTICE.txt --title "$VERSION" --generate-notes "${extra[@]}"
