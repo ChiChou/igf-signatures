@@ -1,0 +1,7 @@
+IGF Signatures stores extracted API declarations and ABI metadata, not SDK implementations or documentation.
+
+Android NDK and AOSP source provenance is recorded in sources.json and the database sources table. Bionic headers carry BSD notices; Android framework sources generally carry Apache-2.0 notices. BoringSSL, SQLite, and other platform libraries have their respective upstream notices. Refer to the pinned upstream repositories for the original sources and notices.
+
+Apple declarations are extracted locally from the installed Xcode SDKs. Apple SDKs and documentation are not redistributed. SDK version and compiler metadata are recorded in the database.
+
+The repository's MIT license applies to the generator and integration code; it does not relicense upstream SDKs or libraries.

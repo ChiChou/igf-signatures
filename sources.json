@@ -1,0 +1,53 @@
+{
+  "ndk": "28.2.13676358",
+  "api": 35,
+  "vndk": {
+    "revision": "af12457a3dc3fe6f03fae2040dbf2d868ef686ba",
+    "api": 34
+  },
+  "bionic": "731631f300090436d7f5df80d50b6275c8c60a93",
+  "kernel": "aa8f225d2792f5fd45e3a853fc2fd5d2e7baf8af",
+  "libraries": [
+    "libbinder",
+    "libutils",
+    "libcutils",
+    "libbase",
+    "libcrypto",
+    "libssl",
+    "libsqlite",
+    "libui",
+    "libstagefright_foundation",
+    "libselinux",
+    "libziparchive"
+  ],
+  "frameworks": [
+    "Foundation",
+    "CoreFoundation",
+    "UIKit",
+    "AppKit",
+    "CoreGraphics",
+    "CoreText",
+    "QuartzCore",
+    "Security",
+    "CFNetwork",
+    "SystemConfiguration",
+    "Network",
+    "CoreServices",
+    "IOKit",
+    "AudioToolbox",
+    "AudioUnit",
+    "CoreAudio",
+    "CoreMedia",
+    "CoreVideo",
+    "AVFoundation",
+    "Accelerate",
+    "ImageIO",
+    "Metal",
+    "OpenGLES",
+    "JavaScriptCore",
+    "WebKit",
+    "LocalAuthentication"
+  ],
+  "sqlite": "38878b88206dbc25342587258cbe8723b3c19d50",
+  "platform": "c92937be9c406393a394ae609b1488f0b1e5df6e"
+}

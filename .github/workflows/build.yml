@@ -1,0 +1,74 @@
+name: Build signature database
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 1 * *'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: android-actions/setup-android@v3
+      - name: Install pinned NDK
+        run: |
+          version=$(python3 -c 'import json; print(json.load(open("sources.json"))["ndk"])')
+          sdkmanager "ndk;$version"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$version" >> "$GITHUB_ENV"
+      - name: Cache pinned source inputs
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: sources-${{ hashFiles('sources.json') }}
+      - name: Select dataset version
+        id: version
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$REF_TYPE" = tag ]; then
+            version="$REF_NAME"
+          elif [ "$EVENT" = schedule ]; then
+            version="snapshot-$(date -u +%Y%m%d)-$GITHUB_RUN_ID"
+          else
+            version="dev-${GITHUB_SHA:0:12}"
+          fi
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+      - name: Test conversion
+        run: python3 -m unittest discover -s tests
+      - name: Build SQLite database
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: python3 generator/build.py --version "$VERSION"
+      - name: Validate database
+        run: python3 generator/check.py dist/signatures.db
+      - uses: actions/upload-artifact@v4
+        with:
+          name: signatures-${{ steps.version.outputs.value }}
+          path: |
+            dist/signatures.db.gz
+            dist/manifest.json
+            dist/diagnostics.json
+            NOTICE.txt
+      - name: Publish release assets
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.value }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          extra=()
+          if [ "$EVENT" = schedule ]; then extra+=(--prerelease); fi
+          gh release create "$VERSION" dist/signatures.db.gz dist/manifest.json dist/diagnostics.json NOTICE.txt --title "$VERSION" --generate-notes "${extra[@]}"
